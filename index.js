@@ -1,21 +1,20 @@
 "use strict";
 
 const Alexa = require("ask-sdk-core");
-// const stream = {
-//   meditate: "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=716503",
-//   candles: "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=672521",
-//   ibiza: "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1762384",
-//   classical: "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=22146",
-//   sada_bahar: "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1645041",
-//   silence: "https://s3.amazonaws.com/naturesounds-alexaskill/silence.mp3",
-//   vividh:
-//     "https://vividhbharati-lh.akamaihd.net/i/vividhbharati_1@507811/index_1_a-p.m3u8",
-//   malayalam:
-//     "https://airmalayalam-lh.akamaihd.net/i/airmalayalam_1@507816/master.m3u8",
-//   tamil: "https://airtamil-lh.akamaihd.net/i/airtamil_1@507817/master.m3u8",
-//   fmrainbow:
-//     "https://fmrainbow-lh.akamaihd.net/i/fmrainbow_1@507812/master.m3u8"
-// };
+
+const polly = {
+  american : ["Ivy", "Joanna", "Joey", "Justin", "Kendra", "Kimberly", "Matthew", "Salli"],
+  australian : ["Nicole", "Russell"],
+  british : ["Amy", "Brian", "Emma"],
+  indian : ["Aditi", "Raveena"],
+  german : ["Hans", "Marlene", "Vicki"],
+  spanish : ["Conchita", "Enrique"],
+  italian : ["Carla", "Giorgio"],
+  japanese : ["Mizuki", "Takumi"],
+  french : ["Celine", "Lea", "Mathieu"]
+}
+
+const languages = ["american", "australian", "british", "indian", "german", "spanish", "italian", "japanese", "french"]
 
 const streams = {
   meditate: {
@@ -31,8 +30,8 @@ const streams = {
     name: "Party Radio",
     url: [
       "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1762384", // ibiza
-      "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1684591",  // disco
-      "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1376488",   // hitparty
+      "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1684591", // disco
+      "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1376488", // hitparty
       "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1593461",
       "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1689368",
       "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1738454"
@@ -46,7 +45,7 @@ const streams = {
     ]
   },
   vividh: {
-    name: "Vividh Bharati",
+    name: "Vividh Bharathi",
     url: [
       "https://vividhbharati-lh.akamaihd.net/i/vividhbharati_1@507811/index_1_a-p.m3u8"
     ]
@@ -192,7 +191,8 @@ const LaunchRequestHandler = {
   handle(handlerInput) {
     let stream_data = getRadioStation();
     console.log("stream: " + JSON.stringify(stream_data));
-    const speechText = `Playing ${stream_data.name}`;
+    let voice = setVoice();
+    const speechText = `<voice name="${voice}">Playing ${stream_data.name} </voice>`;
 
     console.log("LaunchRequestHandler");
 
@@ -233,7 +233,8 @@ const PlayRadioIntentHandler = {
 
     let stream_data = getRadioStation(slotValue);
     console.log("stream: " + JSON.stringify(stream_data.url));
-    const speechText = `Playing ${stream_data.name}`;
+    let voice = setVoice();
+    const speechText = `<voice name="${voice}">Playing ${stream_data.name} </voice>`;
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -271,8 +272,10 @@ const NextIntentHandler = {
   },
   handle(handlerInput) {
     let stream_data = getRadioStation();
-    const speechText = `Now Playing ${stream_data.name}`;
-    console.log("NextIntentHandler - " + speechText);
+    let voice = setVoice();
+    const speechText = `<voice name="${voice}">Playing ${stream_data.name} </voice>`;
+
+    console.log(`NextIntentHandler - ${voice} - ${stream_data.url}`);
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard("Radio", speechText)
@@ -294,7 +297,10 @@ const CancelAndStopIntentHandler = {
     );
   },
   handle(handlerInput) {
-    const speechText = STOP_MSG[num(STOP_MSG.length-1)];
+
+    let voice = setVoice();
+    const speechText = `<voice name="${voice}">${STOP_MSG[num(STOP_MSG.length-1)]} </voice>`;
+
     console.log("CancelAndStopIntentHandler");
 
     return (
@@ -317,7 +323,7 @@ const myErrorHandler = {
     console.log("handlerInput:" + JSON.stringify(handlerInput));
     return (
       handlerInput.responseBuilder
-        // .speak('An error was encountered while handling your request. Try again later')
+        .speak('An error was encountered while handling your request. Try again later')
         .getResponse()
     );
   }
@@ -352,7 +358,7 @@ const AudioPlayerEventHandler = {
 
     switch (audioPlayerEventName) {
       case "PlaybackStarted":
-        console.log("PlaybackStarted");
+        console.log(`PlaybackStarted - ${requestEnvelope.request.token}`);
         // playbackInfo.token = getToken(handlerInput);
         // playbackInfo.index = await getIndex(handlerInput);
         // playbackInfo.inPlaybackSession = true;
@@ -365,47 +371,17 @@ const AudioPlayerEventHandler = {
         // playbackInfo.nextStreamEnqueued = false;
         break;
       case "PlaybackStopped":
-        console.log("PlaybackStopped");
+        console.log(`PlaybackStopped - ${requestEnvelope.request.token}`);
         // playbackInfo.token = getToken(handlerInput);
         // playbackInfo.index = await getIndex(handlerInput);
         // playbackInfo.offsetInMilliseconds = getOffsetInMilliseconds(handlerInput);
         break;
       case "PlaybackNearlyFinished": {
         console.log("PlaybackNearlyFinished");
-        // let checkBack = 24; // 4 min
-        // console.log("PlaybackNearlyFinished");
-        // const playBehavior = "ENQUEUE";
-        // var url = stream.chatter;
-        // var expectedPreviousToken = requestEnvelope.request.token;
-        // console.log("expectedPreviousToken:" + expectedPreviousToken);
-
-        // var enqueueToken = parseInt(expectedPreviousToken, 10);
-        // enqueueToken++;
-        // const offsetInMilliseconds = 0;
-        // console.log("enqueueToken:" + enqueueToken);
-
-        // if (enqueueToken % checkBack === 0 && enqueueToken < 1000) {
-        //   url = isNotBack[num(isNotBack.length - 1)];
-        //   responseBuilder.addAudioPlayerPlayDirective(
-        //     playBehavior,
-        //     url,
-        //     enqueueToken,
-        //     offsetInMilliseconds,
-        //     expectedPreviousToken
-        //   );
-        // } else if (enqueueToken < 1000) {
-        //   responseBuilder.addAudioPlayerPlayDirective(
-        //     playBehavior,
-        //     url,
-        //     enqueueToken,
-        //     offsetInMilliseconds,
-        //     expectedPreviousToken
-        //   );
-        // }
         break;
       }
       case "PlaybackFailed":
-        console.log("PlaybackFailed");
+        console.log(`PlaybackFailed - ${requestEnvelope.request.token}`);
         // playbackInfo.inPlaybackSession = false;
         console.log(
           "Playback Failed : %j",
@@ -479,6 +455,24 @@ function getRadioStation(slot_value) {
 
   // console.log("stream_url: " + JSON.stringify(data));
   return data;
+}
+
+const setVoice = (lang) => {
+	let voice = '';
+	if (lang) {
+		voice = random_item(polly[lang]);
+	} else {
+		let rand_lang = random_item(languages);
+		voice = random_item(polly[rand_lang]);
+	}
+	return voice;
+}
+
+const random_item = (arr) => {
+	let min = 0;
+	let max = arr.length - 1;
+	let rand_num = Math.floor(Math.random() * (max - min + 1)) + min;
+	return arr[rand_num];
 }
 
 function num(max) {
