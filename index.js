@@ -191,7 +191,7 @@ const LaunchRequestHandler = {
   handle(handlerInput) {
     let stream_data = getRadioStation();
     console.log("stream: " + JSON.stringify(stream_data));
-    let voice = setVoice();
+    let voice = setVoice('british');
     const speechText = `<voice name="${voice}">Playing ${stream_data.name} </voice>`;
 
     console.log("LaunchRequestHandler");
@@ -233,7 +233,7 @@ const PlayRadioIntentHandler = {
 
     let stream_data = getRadioStation(slotValue);
     console.log("stream: " + JSON.stringify(stream_data.url));
-    let voice = setVoice();
+    let voice = setVoice('british');
     const speechText = `<voice name="${voice}">Playing ${stream_data.name} </voice>`;
 
     return handlerInput.responseBuilder
@@ -272,7 +272,7 @@ const NextIntentHandler = {
   },
   handle(handlerInput) {
     let stream_data = getRadioStation();
-    let voice = setVoice();
+    let voice = setVoice('british');
     const speechText = `<voice name="${voice}">Playing ${stream_data.name} </voice>`;
 
     console.log(`NextIntentHandler - ${voice} - ${stream_data.url}`);
@@ -298,8 +298,8 @@ const CancelAndStopIntentHandler = {
   },
   handle(handlerInput) {
 
-    let voice = setVoice();
-    const speechText = `<voice name="${voice}">${STOP_MSG[num(STOP_MSG.length-1)]} </voice>`;
+    let voice = setVoice('british');
+    const speechText = `<voice name="${voice}">${randomItem(STOP_MSG)} </voice>`;
 
     console.log("CancelAndStopIntentHandler");
 
@@ -431,25 +431,27 @@ function getOffsetInMilliseconds(handlerInput) {
   return handlerInput.requestEnvelope.request.offsetInMilliseconds;
 }
 
+const randomItem = (arrayOfItems) => {
+  let i = 0;
+  i = Math.floor(Math.random() * arrayOfItems.length);
+  return (arrayOfItems[i]);
+};
+
 function getRadioStation(slot_value) {
-  let rand = num(stations.length);
-
-  let streamName = stations[rand];
-  // console.log("streamName: " + streamName);
-  let stream_url =
-    streams[streamName].url[num(streams[streamName].url.length - 1)];
-
+  let randStation = randomItem(stations);
+  console.log('rand station: ' + randStation);
+  let stream_url = randomItem(streams[randStation].url);
+  console.log('stream_url: ' + stream_url);
   // console.log("stream_url: " + stream_url);
 
   if (slot_value) {
-    streamName = slot_value.toLowerCase();
-    stream_url =
-      streams[streamName].url[num(streams[streamName].url.length - 1)];
+    let streamName = slot_value.toLowerCase();
+    stream_url = randomItem(streams[streamName].url);
   }
 
   let data = {
-    streamName: streamName,
-    name: streams[streamName].name,
+    streamName: randStation,
+    name: streams[randStation].name,
     url: stream_url
   };
 
@@ -478,4 +480,20 @@ const random_item = (arr) => {
 function num(max) {
   let min = 0;
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function callDirectiveService(handlerInput, speech) {
+  const { requestEnvelope } = handlerInput
+  const directiveServiceClient = handlerInput.serviceClientFactory.getDirectiveServiceClient()
+  
+  const directive = {
+    header: {
+      requestId: requestEnvelope.request.requestId
+    },
+    directive: {
+      type: 'VoicePlayer.Speak',
+      speech: speech
+    }
+  }
+  return directiveServiceClient.enqueue(directive, requestEnvelope.context.System.apiEndpoint, requestEnvelope.context.System.apiAccessToken)
 }
