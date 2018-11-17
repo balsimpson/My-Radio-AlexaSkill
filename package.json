@@ -12,5 +12,17 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "tinkr",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/balsimpson/My-Radio-AlexaSkill.git"
+  },
+  "keywords": [
+    "alexa",
+    "radio"
+  ],
+  "bugs": {
+    "url": "https://github.com/balsimpson/My-Radio-AlexaSkill/issues"
+  },
+  "homepage": "https://github.com/balsimpson/My-Radio-AlexaSkill#readme"
 }
