@@ -387,6 +387,16 @@ const AudioPlayerEventHandler = {
           "Playback Failed : %j",
           handlerInput.requestEnvelope.request.error
         );
+
+        let stream_data = getRadioStation();
+        console.log("stream: " + JSON.stringify(stream_data.url));
+        let voice = setVoice('british');
+        const speechText = `<voice name="${voice}">PLayback failed. Now playing ${stream_data.name} </voice>`;
+
+        responseBuilder
+          .speak(speechText)
+          .addAudioPlayerPlayDirective("REPLACE_ALL", stream_data.url, stream_data.name, 0, null)
+          .getResponse();
         return;
       default:
         throw new Error("Should never reach here!");
@@ -445,7 +455,7 @@ const getRadioStation = (slot_value) => {
 
   if (slot_value) {
     console.log('slot_value: ' + slot_value);
-    slot_value.toLowerCase()  
+    slot_value.toLowerCase()
   }
 
   if (_station) {
