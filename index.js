@@ -3,15 +3,15 @@
 const Alexa = require("ask-sdk-core");
 
 const polly = {
-  american : ["Ivy", "Joanna", "Joey", "Justin", "Kendra", "Kimberly", "Matthew", "Salli"],
-  australian : ["Nicole", "Russell"],
-  british : ["Amy", "Brian", "Emma"],
-  indian : ["Aditi", "Raveena"],
-  german : ["Hans", "Marlene", "Vicki"],
-  spanish : ["Conchita", "Enrique"],
-  italian : ["Carla", "Giorgio"],
-  japanese : ["Mizuki", "Takumi"],
-  french : ["Celine", "Lea", "Mathieu"]
+  american: ["Ivy", "Joanna", "Joey", "Justin", "Kendra", "Kimberly", "Matthew", "Salli"],
+  australian: ["Nicole", "Russell"],
+  british: ["Amy", "Brian", "Emma"],
+  indian: ["Aditi", "Raveena"],
+  german: ["Hans", "Marlene", "Vicki"],
+  spanish: ["Conchita", "Enrique"],
+  italian: ["Carla", "Giorgio"],
+  japanese: ["Mizuki", "Takumi"],
+  french: ["Celine", "Lea", "Mathieu"]
 }
 
 const languages = ["american", "australian", "british", "indian", "german", "spanish", "italian", "japanese", "french"]
@@ -114,7 +114,7 @@ const streams = {
       "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1459011",
       "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1528122",
       "https://yp.shoutcast.com/sbin/tunein-station.m3u?id=1763350"
-      
+
     ]
   },
   rock: {
@@ -163,7 +163,7 @@ const STOP_MSG = [
 
 let skill;
 
-exports.handler = async function(event, context) {
+exports.handler = async function (event, context) {
   console.log(`REQUEST++++${JSON.stringify(event)}`);
   if (!skill) {
     skill = Alexa.SkillBuilders.custom()
@@ -199,7 +199,7 @@ const LaunchRequestHandler = {
     return handlerInput.responseBuilder
       .speak(speechText)
       .withShouldEndSession(true)
-      .addAudioPlayerPlayDirective("REPLACE_ALL", stream_data.url, stream_data.streamName, 0, null)
+      .addAudioPlayerPlayDirective("REPLACE_ALL", stream_data.url, stream_data.name, 0, null)
       .getResponse();
   }
 };
@@ -239,7 +239,7 @@ const PlayRadioIntentHandler = {
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard("Hello World", speechText)
-      .addAudioPlayerPlayDirective("REPLACE_ALL", stream_data.url, stream_data.streamName, 0, null)
+      .addAudioPlayerPlayDirective("REPLACE_ALL", stream_data.url, stream_data.name, 0, null)
       .getResponse();
   }
 };
@@ -279,7 +279,7 @@ const NextIntentHandler = {
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard("Radio", speechText)
-      .addAudioPlayerPlayDirective("REPLACE_ALL", stream_data.url, stream_data.streamName, 0, null)
+      .addAudioPlayerPlayDirective("REPLACE_ALL", stream_data.url, stream_data.name, 0, null)
       .getResponse();
   }
 };
@@ -291,9 +291,9 @@ const CancelAndStopIntentHandler = {
       (handlerInput.requestEnvelope.request.intent.name ===
         "AMAZON.CancelIntent" ||
         handlerInput.requestEnvelope.request.intent.name ===
-          "AMAZON.StopIntent" ||
+        "AMAZON.StopIntent" ||
         handlerInput.requestEnvelope.request.intent.name ===
-          "AMAZON.PauseIntent")
+        "AMAZON.PauseIntent")
     );
   },
   handle(handlerInput) {
@@ -407,7 +407,7 @@ const SystemExceptionHandler = {
   handle(handlerInput) {
     console.log(
       `System exception encountered: ${
-        handlerInput.requestEnvelope.request.reason
+      handlerInput.requestEnvelope.request.reason
       }`
     );
   }
@@ -437,44 +437,57 @@ const randomItem = (arrayOfItems) => {
   return (arrayOfItems[i]);
 };
 
-function getRadioStation(slot_value) {
-  let randStation = randomItem(stations);
-  console.log('rand station: ' + randStation);
-  let stream_url = randomItem(streams[randStation].url);
-  console.log('stream_url: ' + stream_url);
-  // console.log("stream_url: " + stream_url);
+const getRadioStation = (slot_value) => {
+
+  // console.log('slot_value: ' + slot_value);
+  let _station = '';
+  let _stream;
 
   if (slot_value) {
-    let streamName = slot_value.toLowerCase();
-    stream_url = randomItem(streams[streamName].url);
+    console.log('slot_value: ' + slot_value);
+    slot_value.toLowerCase()  
   }
 
+  if (_station) {
+    console.log('_station: ' + _station);
+    _stream = streams[_station];
+  } else {
+    let rand_station = randomItem(stations);
+    console.log('_station else: ' + rand_station);
+    _stream = streams[rand_station];
+  }
+
+  console.log('stream: ' + JSON.stringify(_stream));
+  let stream_name = _stream.name;
+  let stream_url = randomItem(_stream.url);
+
+  console.log('stream_name: ' + stream_name);
+  console.log('stream_url: ' + stream_url);
+
   let data = {
-    streamName: randStation,
-    name: streams[randStation].name,
+    name: stream_name,
     url: stream_url
   };
 
-  // console.log("stream_url: " + JSON.stringify(data));
   return data;
 }
 
 const setVoice = (lang) => {
-	let voice = '';
-	if (lang) {
-		voice = random_item(polly[lang]);
-	} else {
-		let rand_lang = random_item(languages);
-		voice = random_item(polly[rand_lang]);
-	}
-	return voice;
+  let voice = '';
+  if (lang) {
+    voice = random_item(polly[lang]);
+  } else {
+    let rand_lang = random_item(languages);
+    voice = random_item(polly[rand_lang]);
+  }
+  return voice;
 }
 
 const random_item = (arr) => {
-	let min = 0;
-	let max = arr.length - 1;
-	let rand_num = Math.floor(Math.random() * (max - min + 1)) + min;
-	return arr[rand_num];
+  let min = 0;
+  let max = arr.length - 1;
+  let rand_num = Math.floor(Math.random() * (max - min + 1)) + min;
+  return arr[rand_num];
 }
 
 function num(max) {
@@ -485,7 +498,7 @@ function num(max) {
 function callDirectiveService(handlerInput, speech) {
   const { requestEnvelope } = handlerInput
   const directiveServiceClient = handlerInput.serviceClientFactory.getDirectiveServiceClient()
-  
+
   const directive = {
     header: {
       requestId: requestEnvelope.request.requestId
