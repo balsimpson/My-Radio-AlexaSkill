@@ -457,7 +457,8 @@ const getRadioStation = (slot_value) => {
 
   if (slot_value) {
     console.log('slot_value: ' + slot_value);
-    slot_value.toLowerCase()
+    slot_value.toLowerCase();
+    _station = slot_value;
   }
 
   if (_station) {
