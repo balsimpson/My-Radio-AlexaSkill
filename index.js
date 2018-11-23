@@ -457,7 +457,7 @@ const getRadioStation = (slot_value) => {
 
   if (slot_value) {
     console.log('slot_value: ' + slot_value);
-    slot_value.toLowerCase();
+    slot_value = slot_value.toLowerCase();
     _station = slot_value;
   }
 
@@ -494,18 +494,6 @@ const setVoice = (lang) => {
     voice = random_item(polly[rand_lang]);
   }
   return voice;
-}
-
-const random_item = (arr) => {
-  let min = 0;
-  let max = arr.length - 1;
-  let rand_num = Math.floor(Math.random() * (max - min + 1)) + min;
-  return arr[rand_num];
-}
-
-function num(max) {
-  let min = 0;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function callDirectiveService(handlerInput, speech) {
